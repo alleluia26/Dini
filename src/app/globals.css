@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-canvas);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand-blue);
+  outline-offset: 3px;
+}

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# Generated Prisma output
+src/generated/
+
+# Tooling and coverage
+coverage/
+*.tsbuildinfo
+
+# Operating system files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,21 @@
+:root {
+  --color-brand-red: #c92020;
+  --color-brand-red-hover: #a91a1a;
+  --color-brand-blue: #1739c7;
+  --color-brand-blue-soft: #e9eeff;
+  --color-ink: #172033;
+  --color-muted: #667085;
+  --color-canvas: #fafaf8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f4f6fa;
+  --color-border: #e4e7ec;
+  --color-success: #16804b;
+  --color-warning: #b54708;
+  --color-error: #b42318;
+  --font-sans: "Manrope", "Aptos", "Segoe UI", sans-serif;
+  --shadow-card: 0 10px 30px rgb(23 32 51 / 8%);
+  --shadow-elevated: 0 20px 45px rgb(23 32 51 / 14%);
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+}

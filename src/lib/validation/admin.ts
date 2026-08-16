@@ -1,0 +1,108 @@
+import { z } from "zod";
+
+const optionalText = z
+  .string()
+  .trim()
+  .max(2_000)
+  .transform((value) => value || null);
+
+const optionalId = z
+  .string()
+  .trim()
+  .cuid()
+  .optional()
+  .or(z.literal(""))
+  .transform((value) => value || null);
+
+const integer = z.coerce.number().int().min(0).max(100_000);
+
+const decimal = z
+  .string()
+  .trim()
+  .regex(/^\d+(?:\.\d{1,2})?$/, "Use a non-negative amount with up to two decimals.")
+  .refine((value) => Number(value) <= 99_999_999.99, "Amount is too large.");
+
+export const categorySchema = z.object({
+  id: z.string().cuid().optional(),
+  name: z.string().trim().min(2).max(100),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens.")
+    .max(120),
+  description: optionalText,
+  imageAssetId: optionalId,
+  displayOrder: integer,
+  active: z.boolean(),
+});
+
+export const menuItemSchema = z
+  .object({
+    id: z.string().cuid().optional(),
+    categoryId: z.string().cuid(),
+    name: z.string().trim().min(2).max(140),
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens.")
+      .max(160),
+    description: optionalText,
+    price: decimal,
+    oldPrice: z
+      .string()
+      .trim()
+      .transform((value) => value || null)
+      .pipe(decimal.nullable()),
+    imageAssetId: optionalId,
+    available: z.boolean(),
+    featured: z.boolean(),
+    active: z.boolean(),
+    displayOrder: integer,
+  })
+  .superRefine((value, context) => {
+    if (value.oldPrice && Number(value.oldPrice) <= Number(value.price)) {
+      context.addIssue({
+        code: "custom",
+        message: "Old price must be greater than the current price.",
+        path: ["oldPrice"],
+      });
+    }
+  });
+
+const socialLinkSchema = z.string().url().max(500);
+
+export const settingsSchema = z.object({
+  hotelName: z.string().trim().min(2).max(120),
+  description: optionalText,
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .regex(/^[+()0-9.\-\s]*$/, "Enter a valid contact number.")
+    .transform((value) => value || null),
+  address: z
+    .string()
+    .trim()
+    .max(500)
+    .transform((value) => value || null),
+  openingHours: z
+    .string()
+    .trim()
+    .max(500)
+    .transform((value) => value || null),
+  currency: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{3}$/, "Use a three-letter currency code."),
+  socialLinks: z.record(z.string().max(60), socialLinkSchema).default({}),
+  menuEnabled: z.boolean(),
+  logoAssetId: optionalId,
+  coverAssetId: optionalId,
+});
+
+export type CategoryInput = z.infer<typeof categorySchema>;
+export type MenuItemInput = z.infer<typeof menuItemSchema>;
+export type SettingsInput = z.infer<typeof settingsSchema>;

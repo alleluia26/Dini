@@ -14,8 +14,6 @@ const optionalId = z
   .or(z.literal(""))
   .transform((value) => value || null);
 
-const integer = z.coerce.number().int().min(0).max(100_000);
-
 const decimal = z
   .string()
   .trim()
@@ -33,7 +31,6 @@ export const categorySchema = z.object({
     .max(120),
   description: optionalText,
   imageAssetId: optionalId,
-  displayOrder: integer,
   active: z.boolean(),
 });
 
@@ -59,7 +56,6 @@ export const menuItemSchema = z
     available: z.boolean(),
     featured: z.boolean(),
     active: z.boolean(),
-    displayOrder: integer,
   })
   .superRefine((value, context) => {
     if (value.oldPrice && Number(value.oldPrice) <= Number(value.price)) {
@@ -71,36 +67,14 @@ export const menuItemSchema = z
     }
   });
 
-const socialLinkSchema = z.string().url().max(500);
-
 export const settingsSchema = z.object({
   hotelName: z.string().trim().min(2).max(120),
-  description: optionalText,
-  phone: z
-    .string()
-    .trim()
-    .max(40)
-    .regex(/^[+()0-9.\-\s]*$/, "Enter a valid contact number.")
-    .transform((value) => value || null),
-  address: z
-    .string()
-    .trim()
-    .max(500)
-    .transform((value) => value || null),
-  openingHours: z
-    .string()
-    .trim()
-    .max(500)
-    .transform((value) => value || null),
   currency: z
     .string()
     .trim()
     .toUpperCase()
     .regex(/^[A-Z]{3}$/, "Use a three-letter currency code."),
-  socialLinks: z.record(z.string().max(60), socialLinkSchema).default({}),
   menuEnabled: z.boolean(),
-  logoAssetId: optionalId,
-  coverAssetId: optionalId,
 });
 
 export type CategoryInput = z.infer<typeof categorySchema>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { saveMenuItem, type AdminActionState } from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
@@ -8,28 +8,49 @@ import { MediaUpload } from "@/components/admin/media-upload";
 
 const initialState: AdminActionState = {};
 
-type CategoryOption = { id: string; name: string };
-type MenuItemFormProps = {
-  categories: CategoryOption[];
-  item?: {
-    active: boolean;
-    available: boolean;
-    categoryId: string;
-    description: string | null;
-    displayOrder: number;
-    featured: boolean;
-    id: string;
-    imageAssetId: string | null;
-    name: string;
-    oldPrice: string | null;
-    price: string;
-    slug: string;
-  };
+export type CategoryOption = { id: string; name: string };
+export type MenuItemFormData = {
+  active: boolean;
+  available: boolean;
+  categoryId: string;
+  description: string | null;
+  featured: boolean;
+  id: string;
+  imageAssetId: string | null;
+  name: string;
+  oldPrice: string | null;
+  price: string;
+  slug: string;
 };
 
-export function MenuItemForm({ categories, item }: MenuItemFormProps) {
+type MenuItemFormProps = {
+  categories: CategoryOption[];
+  item?: MenuItemFormData;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+};
+
+export function MenuItemForm({
+  categories,
+  item,
+  onCancel,
+  onSuccess,
+}: MenuItemFormProps) {
   const [state, formAction, isPending] = useActionState(saveMenuItem, initialState);
   const [imageAssetId, setImageAssetId] = useState(item?.imageAssetId ?? "");
+  const successHandled = useRef(false);
+
+  useEffect(() => {
+    if (!state.success) {
+      successHandled.current = false;
+      return;
+    }
+
+    if (!successHandled.current) {
+      successHandled.current = true;
+      onSuccess?.();
+    }
+  }, [onSuccess, state.success]);
 
   return (
     <form
@@ -97,7 +118,7 @@ export function MenuItemForm({ categories, item }: MenuItemFormProps) {
           name="description"
         />
       </div>
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-bold" htmlFor="item-price">
             Price
@@ -124,21 +145,6 @@ export function MenuItemForm({ categories, item }: MenuItemFormProps) {
             name="oldPrice"
           />
           <FieldError errors={state.fieldErrors?.oldPrice} />
-        </div>
-        <div>
-          <label className="mb-2 block text-sm font-bold" htmlFor="item-order">
-            Display order
-          </label>
-          <input
-            className="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] px-3 py-3"
-            defaultValue={item?.displayOrder ?? 0}
-            id="item-order"
-            min="0"
-            name="displayOrder"
-            type="number"
-            required
-          />
-          <FieldError errors={state.fieldErrors?.displayOrder} />
         </div>
       </div>
       <fieldset className="flex flex-wrap gap-x-6 gap-y-3">
@@ -171,13 +177,25 @@ export function MenuItemForm({ categories, item }: MenuItemFormProps) {
         value={imageAssetId}
       />
       <ActionFeedback state={state} />
-      <button
-        className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 text-sm font-extrabold text-white disabled:opacity-60"
-        disabled={isPending}
-        type="submit"
-      >
-        {isPending ? "Saving…" : item ? "Save menu item" : "Create menu item"}
-      </button>
+      <div className="flex flex-wrap justify-end gap-3">
+        {onCancel ? (
+          <button
+            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--color-border)] px-5 text-sm font-bold disabled:opacity-60"
+            disabled={isPending}
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        ) : null}
+        <button
+          className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 text-sm font-extrabold text-white disabled:opacity-60"
+          disabled={isPending}
+          type="submit"
+        >
+          {isPending ? "Saving…" : item ? "Save menu item" : "Create menu item"}
+        </button>
+      </div>
     </form>
   );
 }

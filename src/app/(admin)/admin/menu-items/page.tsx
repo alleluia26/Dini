@@ -4,7 +4,7 @@ import Image from "next/image";
 import { deleteMenuItem } from "@/app/actions/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DeleteButton } from "@/components/admin/delete-button";
-import { MenuItemForm } from "@/components/admin/menu-item-form";
+import { MenuItemFormDialog } from "@/components/admin/menu-item-form-dialog";
 import { prisma } from "@/lib/db/client";
 
 type MenuItemsPageProps = {
@@ -53,22 +53,25 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
   return (
     <AdminShell>
       <section className="mx-auto max-w-6xl space-y-8">
-        <header>
-          <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
-            MENU MANAGEMENT
-          </p>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight">Menu items</h1>
-          <p className="mt-3 text-[var(--color-muted)]">
-            Keep pricing, availability, feature status, and ordering current.
-          </p>
+        <header className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
+              MENU MANAGEMENT
+            </p>
+            <h1 className="mt-3 text-3xl font-extrabold tracking-tight">Menu items</h1>
+            <p className="mt-3 text-[var(--color-muted)]">
+              Keep pricing, availability, feature status, and ordering current.
+            </p>
+          </div>
+          <MenuItemFormDialog categories={categories} />
         </header>
         {categories.length === 0 ? (
           <div className="rounded-[var(--radius-card)] border border-[var(--color-warning)] bg-amber-50 p-5 text-sm font-semibold text-[var(--color-warning)]">
             Create a category before adding a menu item.
           </div>
-        ) : (
-          <MenuItemForm categories={categories} item={formItem} />
-        )}
+        ) : formItem ? (
+          <MenuItemFormDialog categories={categories} defaultOpen item={formItem} />
+        ) : null}
         <form
           className="grid gap-3 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:grid-cols-6"
           action="/admin/menu-items"
@@ -136,7 +139,7 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
                   <th className="px-5 py-3">Price</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Order</th>
-                  <th className="px-5 py-3">Actions</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,7 +203,7 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
                     </td>
                     <td className="px-5 py-4">{item.displayOrder}</td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
                           className="min-h-11 rounded-[var(--radius-control)] px-3 py-3 font-bold text-[var(--color-brand-blue)]"
                           href={`/admin/menu-items?edit=${item.id}`}
@@ -209,6 +212,7 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
                         </Link>
                         <DeleteButton
                           action={deleteMenuItem}
+                          entityName="menu item"
                           id={item.id}
                           label={item.name}
                         />

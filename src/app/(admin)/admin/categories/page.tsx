@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { deleteCategory } from "@/app/actions/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { CategoryForm } from "@/components/admin/category-form";
+import { CategoryFormDialog } from "@/components/admin/category-form-dialog";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { prisma } from "@/lib/db/client";
 
@@ -23,16 +23,19 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
   return (
     <AdminShell>
       <section className="mx-auto max-w-6xl space-y-8">
-        <header>
-          <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
-            MENU STRUCTURE
-          </p>
-          <h1 className="mt-3 text-3xl font-extrabold tracking-tight">Categories</h1>
-          <p className="mt-3 text-[var(--color-muted)]">
-            Create, order, and control the categories shown on the menu.
-          </p>
+        <header className="flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
+              MENU STRUCTURE
+            </p>
+            <h1 className="mt-3 text-3xl font-extrabold tracking-tight">Categories</h1>
+            <p className="mt-3 text-[var(--color-muted)]">
+              Create, order, and control the categories shown on the menu.
+            </p>
+          </div>
+          <CategoryFormDialog />
         </header>
-        <CategoryForm category={selected ?? undefined} />
+        {selected ? <CategoryFormDialog category={selected} defaultOpen /> : null}
         <form className="flex gap-3" action="/admin/categories">
           <label className="sr-only" htmlFor="category-search">
             Search categories
@@ -50,7 +53,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
         </form>
         {categories.length === 0 ? (
           <div className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center text-[var(--color-muted)]">
-            No categories yet. Create the first category above.
+            No categories yet. Use Add Category to create the first one.
           </div>
         ) : (
           <div className="overflow-x-auto rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)]">
@@ -61,7 +64,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Items</th>
                   <th className="px-5 py-3">Order</th>
-                  <th className="px-5 py-3">Actions</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -86,7 +89,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
                     <td className="px-5 py-4">{category._count.menuItems}</td>
                     <td className="px-5 py-4">{category.displayOrder}</td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-end gap-2">
                         <Link
                           className="min-h-11 rounded-[var(--radius-control)] px-3 py-3 font-bold text-[var(--color-brand-blue)]"
                           href={`/admin/categories?edit=${category.id}`}
@@ -95,6 +98,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
                         </Link>
                         <DeleteButton
                           action={deleteCategory}
+                          entityName="category"
                           id={category.id}
                           label={category.name}
                         />

@@ -10,7 +10,11 @@ const navigation = [
   { href: "/admin/settings", label: "Settings" },
 ];
 
-export function AdminNav() {
+type AdminNavProps = {
+  onNavigate?: () => void;
+};
+
+export function AdminNav({ onNavigate }: AdminNavProps) {
   const pathname = usePathname();
 
   return (
@@ -23,6 +27,7 @@ export function AdminNav() {
               <Link
                 className={`block min-h-11 rounded-[var(--radius-control)] px-4 py-3 text-sm font-bold transition ${active ? "bg-[var(--color-brand-blue-soft)] text-[var(--color-brand-blue)]" : "text-[var(--color-muted)] hover:bg-[var(--color-surface-soft)] hover:text-[var(--color-ink)]"}`}
                 href={item.href}
+                onClick={onNavigate}
               >
                 {item.label}
               </Link>

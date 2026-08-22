@@ -9,15 +9,12 @@ export async function deleteMediaAssetIfUnused(id: string | null) {
   const asset = await prisma.mediaAsset.findUnique({ where: { id } });
   if (!asset) return false;
 
-  const [categoryImages, menuItemImages, settingsLogoUsage, settingsCoverUsage] =
-    await Promise.all([
-      prisma.category.count({ where: { imageAssetId: id } }),
-      prisma.menuItem.count({ where: { imageAssetId: id } }),
-      prisma.restaurantSettings.count({ where: { logoAssetId: id } }),
-      prisma.restaurantSettings.count({ where: { coverAssetId: id } }),
-    ]);
+  const [categoryImages, menuItemImages] = await Promise.all([
+    prisma.category.count({ where: { imageAssetId: id } }),
+    prisma.menuItem.count({ where: { imageAssetId: id } }),
+  ]);
 
-  if (categoryImages + menuItemImages + settingsLogoUsage + settingsCoverUsage > 0) {
+  if (categoryImages + menuItemImages > 0) {
     return false;
   }
 

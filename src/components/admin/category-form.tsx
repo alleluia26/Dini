@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { saveCategory, type AdminActionState } from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
@@ -8,21 +8,44 @@ import { MediaUpload } from "@/components/admin/media-upload";
 
 const initialState: AdminActionState = {};
 
+export type CategoryFormData = {
+  active: boolean;
+  description: string | null;
+  id: string;
+  imageAssetId: string | null;
+  name: string;
+  slug: string;
+};
+
 type CategoryFormProps = {
   category?: {
     active: boolean;
     description: string | null;
-    displayOrder: number;
     id: string;
     imageAssetId: string | null;
     name: string;
     slug: string;
   };
+  onCancel?: () => void;
+  onSuccess?: () => void;
 };
 
-export function CategoryForm({ category }: CategoryFormProps) {
+export function CategoryForm({ category, onCancel, onSuccess }: CategoryFormProps) {
   const [state, formAction, isPending] = useActionState(saveCategory, initialState);
   const [imageAssetId, setImageAssetId] = useState(category?.imageAssetId ?? "");
+  const successHandled = useRef(false);
+
+  useEffect(() => {
+    if (!state.success) {
+      successHandled.current = false;
+      return;
+    }
+
+    if (!successHandled.current) {
+      successHandled.current = true;
+      onSuccess?.();
+    }
+  }, [onSuccess, state.success]);
 
   return (
     <form
@@ -71,23 +94,8 @@ export function CategoryForm({ category }: CategoryFormProps) {
         />
         <FieldError errors={state.fieldErrors?.description} />
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <label className="mb-2 block text-sm font-bold" htmlFor="category-order">
-            Display order
-          </label>
-          <input
-            className="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] px-3 py-3"
-            defaultValue={category?.displayOrder ?? 0}
-            id="category-order"
-            min="0"
-            name="displayOrder"
-            type="number"
-            required
-          />
-          <FieldError errors={state.fieldErrors?.displayOrder} />
-        </div>
-        <label className="flex min-h-11 items-center gap-3 self-end text-sm font-bold">
+      <div>
+        <label className="flex min-h-11 items-center gap-3 text-sm font-bold">
           <input
             defaultChecked={category?.active ?? true}
             name="active"
@@ -103,13 +111,25 @@ export function CategoryForm({ category }: CategoryFormProps) {
         value={imageAssetId}
       />
       <ActionFeedback state={state} />
-      <button
-        className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 text-sm font-extrabold text-white disabled:opacity-60"
-        disabled={isPending}
-        type="submit"
-      >
-        {isPending ? "Saving…" : category ? "Save category" : "Create category"}
-      </button>
+      <div className="flex flex-wrap justify-end gap-3">
+        {onCancel ? (
+          <button
+            className="min-h-11 rounded-[var(--radius-control)] border border-[var(--color-border)] px-5 text-sm font-bold disabled:opacity-60"
+            disabled={isPending}
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+        ) : null}
+        <button
+          className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 text-sm font-extrabold text-white disabled:opacity-60"
+          disabled={isPending}
+          type="submit"
+        >
+          {isPending ? "Saving…" : category ? "Save category" : "Create category"}
+        </button>
+      </div>
     </form>
   );
 }

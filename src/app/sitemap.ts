@@ -1,6 +1,15 @@
 import type { MetadataRoute } from "next";
 
+import { getSiteUrl } from "@/lib/public/site-url";
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  // The production URL and settings-driven menu entry will be added in Phase 7.
-  return [];
+  const siteUrl = getSiteUrl();
+
+  if (!siteUrl) return [];
+
+  return [
+    {
+      url: new URL("/menu", siteUrl).toString(),
+    },
+  ];
 }

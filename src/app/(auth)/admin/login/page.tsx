@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-[var(--color-surface-soft)] p-5">
       <section className="w-full max-w-md rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-surface)] p-7 shadow-[var(--shadow-card)] sm:p-10">
-        <BrandLogo priority />
+        <BrandLogo className="h-auto w-56" priority sizes="224px" />
         <p className="mt-8 text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
           ADMIN ACCESS
         </p>

@@ -72,19 +72,10 @@ model MenuItem {
 model RestaurantSettings {
   id           String      @id @default("default")
   hotelName    String
-  logoAssetId  String?
-  coverAssetId String?
-  description  String?
-  phone        String?
-  address      String?
-  openingHours String?
-  socialLinks  Json
   currency     String
   menuEnabled  Boolean     @default(false)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  logoAsset    MediaAsset? @relation("SettingsLogo", fields: [logoAssetId], references: [id], onDelete: Restrict)
-  coverAsset   MediaAsset? @relation("SettingsCover", fields: [coverAssetId], references: [id], onDelete: Restrict)
 }
 
 model MediaAsset {
@@ -100,8 +91,6 @@ model MediaAsset {
   updatedAt          DateTime             @updatedAt
   categoryImages     Category[]           @relation("CategoryImage")
   menuItemImages     MenuItem[]           @relation("MenuItemImage")
-  settingsLogoUsage  RestaurantSettings[] @relation("SettingsLogo")
-  settingsCoverUsage RestaurantSettings[] @relation("SettingsCover")
 }
 
 // All Dini Hotel models use PostgreSQL's default public schema.

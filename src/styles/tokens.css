@@ -19,3 +19,85 @@
   --radius-card: 1rem;
   --radius-panel: 1.5rem;
 }
+
+[data-admin-theme="dark"],
+[data-public-theme="dark"] {
+  color-scheme: dark;
+  --color-brand-red: #d85b5b;
+  --color-brand-red-hover: #ed6d6d;
+  --color-brand-blue: #6478e8;
+  --color-brand-blue-soft: #28355f;
+  --color-ink: #f8fafc;
+  --color-muted: #cbd5e1;
+  --color-canvas: #0b1220;
+  --color-surface: #111827;
+  --color-surface-soft: #1f2937;
+  --color-border: #3b4a60;
+  --color-success: #6ee7b7;
+  --color-warning: #fcd34d;
+  --color-error: #fca5a5;
+  --shadow-card: 0 10px 30px rgb(0 0 0 / 30%);
+  --shadow-elevated: 0 20px 45px rgb(0 0 0 / 45%);
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+[data-admin-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-admin-theme="dark"] textarea,
+[data-admin-theme="dark"] select,
+[data-public-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-public-theme="dark"] textarea,
+[data-public-theme="dark"] select {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+[data-admin-theme="dark"] input::placeholder,
+[data-admin-theme="dark"] textarea::placeholder,
+[data-public-theme="dark"] input::placeholder,
+[data-public-theme="dark"] textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+[data-admin-theme="dark"] option,
+[data-public-theme="dark"] option {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+[data-admin-theme="dark"] .bg-red-50,
+[data-public-theme="dark"] .bg-red-50 {
+  background-color: #4a1d24;
+}
+
+[data-admin-theme="dark"] .bg-amber-50,
+[data-public-theme="dark"] .bg-amber-50 {
+  background-color: #4a3210;
+}
+
+[data-admin-theme="dark"] .bg-emerald-50,
+[data-public-theme="dark"] .bg-emerald-50 {
+  background-color: #103629;
+}
+
+[data-admin-theme="dark"] .bg-blue-50,
+[data-public-theme="dark"] .bg-blue-50 {
+  background-color: #172554;
+}
+
+[data-admin-theme="dark"] .bg-slate-100,
+[data-public-theme="dark"] .bg-slate-100 {
+  background-color: #273449;
+}
+
+[data-admin-theme="dark"] .bg-slate-200,
+[data-public-theme="dark"] .bg-slate-200 {
+  background-color: #334155;
+}
+
+[data-admin-theme="dark"] .border-red-200,
+[data-public-theme="dark"] .border-red-200 {
+  border-color: #7f3038;
+}

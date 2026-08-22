@@ -46,7 +46,10 @@ export async function POST(request: Request) {
       throw error;
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Image upload failed.";
-    return NextResponse.json({ message }, { status: 400 });
+    void error;
+    return NextResponse.json(
+      { message: "Image upload failed. Check the image and try again." },
+      { status: 400 },
+    );
   }
 }

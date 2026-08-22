@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { revalidateMenuManagement } from "@/lib/admin/revalidation";
 import { prisma } from "@/lib/db/client";
@@ -62,33 +60,39 @@ export async function saveCategory(
     slug: value(formData, "slug"),
     description: value(formData, "description"),
     imageAssetId: value(formData, "imageAssetId"),
-    displayOrder: value(formData, "displayOrder"),
     active: checked(formData, "active"),
   });
 
   if (!parsed.success) return errors(parsed.error);
 
   try {
-    await assertMediaAsset(parsed.data.imageAssetId);
+    const { id, ...categoryData } = parsed.data;
+    await assertMediaAsset(categoryData.imageAssetId);
 
-    if (parsed.data.id) {
+    if (id) {
       const existing = await prisma.category.findUnique({
-        where: { id: parsed.data.id },
+        where: { id },
         select: { imageAssetId: true },
       });
 
       await prisma.category.update({
-        where: { id: parsed.data.id },
-        data: parsed.data,
+        where: { id },
+        data: categoryData,
       });
 
-      if (existing?.imageAssetId !== parsed.data.imageAssetId) {
+      if (existing?.imageAssetId !== categoryData.imageAssetId) {
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      const { id, ...data } = parsed.data;
-      void id;
-      await prisma.category.create({ data });
+      const lastCategory = await prisma.category.aggregate({
+        _max: { displayOrder: true },
+      });
+      await prisma.category.create({
+        data: {
+          ...categoryData,
+          displayOrder: (lastCategory._max.displayOrder ?? -1) + 1,
+        },
+      });
     }
 
     revalidateMenuManagement();
@@ -108,19 +112,25 @@ export async function deleteCategory(
 
   if (!id) return { message: "Choose a category to delete." };
 
-  const category = await prisma.category.findUnique({
-    where: { id },
-    select: { _count: { select: { menuItems: true } } },
-  });
+  try {
+    const category = await prisma.category.findUnique({
+      where: { id },
+      select: { _count: { select: { menuItems: true } } },
+    });
 
-  if (!category) return { message: "This category no longer exists." };
-  if (category._count.menuItems > 0) {
-    return { message: "Move or remove this category's menu items before deleting it." };
+    if (!category) return { message: "This category no longer exists." };
+    if (category._count.menuItems > 0) {
+      return {
+        message: "Move or remove this category's menu items before deleting it.",
+      };
+    }
+
+    await prisma.category.delete({ where: { id } });
+    revalidateMenuManagement();
+    return { success: true, message: "Category deleted." };
+  } catch {
+    return { message: "This category could not be deleted." };
   }
-
-  await prisma.category.delete({ where: { id } });
-  revalidateMenuManagement();
-  return { success: true, message: "Category deleted." };
 }
 
 export async function saveMenuItem(
@@ -142,38 +152,45 @@ export async function saveMenuItem(
     available: checked(formData, "available"),
     featured: checked(formData, "featured"),
     active: checked(formData, "active"),
-    displayOrder: value(formData, "displayOrder"),
   });
 
   if (!parsed.success) return errors(parsed.error);
 
   try {
+    const { id, ...menuItemData } = parsed.data;
     const category = await prisma.category.findUnique({
-      where: { id: parsed.data.categoryId },
+      where: { id: menuItemData.categoryId },
       select: { id: true },
     });
 
     if (!category) return { message: "Choose an existing category." };
-    await assertMediaAsset(parsed.data.imageAssetId);
+    await assertMediaAsset(menuItemData.imageAssetId);
 
-    if (parsed.data.id) {
+    if (id) {
       const existing = await prisma.menuItem.findUnique({
-        where: { id: parsed.data.id },
+        where: { id },
         select: { imageAssetId: true },
       });
 
       await prisma.menuItem.update({
-        where: { id: parsed.data.id },
-        data: parsed.data,
+        where: { id },
+        data: menuItemData,
       });
 
-      if (existing?.imageAssetId !== parsed.data.imageAssetId) {
+      if (existing?.imageAssetId !== menuItemData.imageAssetId) {
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      const { id, ...data } = parsed.data;
-      void id;
-      await prisma.menuItem.create({ data });
+      const lastMenuItem = await prisma.menuItem.aggregate({
+        where: { categoryId: menuItemData.categoryId },
+        _max: { displayOrder: true },
+      });
+      await prisma.menuItem.create({
+        data: {
+          ...menuItemData,
+          displayOrder: (lastMenuItem._max.displayOrder ?? -1) + 1,
+        },
+      });
     }
 
     revalidateMenuManagement();
@@ -209,56 +226,22 @@ export async function saveSettings(
   void previousState;
   await requireAdmin();
 
-  let socialLinks: unknown = {};
-
-  try {
-    socialLinks = JSON.parse(value(formData, "socialLinks") || "{}");
-  } catch {
-    return { fieldErrors: { socialLinks: ["Enter valid JSON with URL values."] } };
-  }
-
   const parsed = settingsSchema.safeParse({
     hotelName: value(formData, "hotelName"),
-    description: value(formData, "description"),
-    phone: value(formData, "phone"),
-    address: value(formData, "address"),
-    openingHours: value(formData, "openingHours"),
     currency: value(formData, "currency"),
-    socialLinks,
     menuEnabled: checked(formData, "menuEnabled"),
-    logoAssetId: value(formData, "logoAssetId"),
-    coverAssetId: value(formData, "coverAssetId"),
   });
 
   if (!parsed.success) return errors(parsed.error);
 
   try {
-    await Promise.all([
-      assertMediaAsset(parsed.data.logoAssetId),
-      assertMediaAsset(parsed.data.coverAssetId),
-    ]);
-
-    const previous = await prisma.restaurantSettings.findUnique({
-      where: { id: "default" },
-      select: { coverAssetId: true, logoAssetId: true },
-    });
-
     await prisma.restaurantSettings.upsert({
       where: { id: "default" },
       create: { id: "default", ...parsed.data },
       update: parsed.data,
     });
 
-    if (previous?.logoAssetId !== parsed.data.logoAssetId) {
-      await deleteMediaAssetIfUnused(previous?.logoAssetId ?? null);
-    }
-
-    if (previous?.coverAssetId !== parsed.data.coverAssetId) {
-      await deleteMediaAssetIfUnused(previous?.coverAssetId ?? null);
-    }
-
     revalidateMenuManagement();
-    revalidatePath("/settings");
     return { success: true, message: "Settings saved." };
   } catch (error) {
     return databaseError(error);

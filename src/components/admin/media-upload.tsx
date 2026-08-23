@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 import { supportedImageAccept, validateImageFile } from "@/lib/validation/image";
 
@@ -12,8 +12,21 @@ type MediaUploadProps = {
 };
 
 export function MediaUpload({ label, name, onUploaded, value }: MediaUploadProps) {
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [cameraCaptureSupported, setCameraCaptureSupported] = useState(false);
   const [message, setMessage] = useState<string>();
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setCameraCaptureSupported(
+        typeof navigator.mediaDevices?.getUserMedia === "function",
+      );
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function upload(file: File) {
     setUploading(true);
@@ -47,6 +60,12 @@ export function MediaUpload({ label, name, onUploaded, value }: MediaUploadProps
     }
   }
 
+  function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    if (file) void upload(file);
+    event.currentTarget.value = "";
+  }
+
   return (
     <div>
       <label
@@ -58,23 +77,50 @@ export function MediaUpload({ label, name, onUploaded, value }: MediaUploadProps
       <input
         accept={supportedImageAccept}
         aria-describedby={`${name}-upload-hint`}
-        capture="environment"
-        className="block w-full text-sm text-[var(--color-muted)] file:mr-4 file:min-h-11 file:rounded-[var(--radius-control)] file:border-0 file:bg-[var(--color-brand-blue-soft)] file:px-4 file:font-bold file:text-[var(--color-brand-blue)]"
+        className="sr-only"
         disabled={uploading}
         id={name}
-        onChange={(event) => {
-          const file = event.currentTarget.files?.[0];
-          if (file) void upload(file);
-          event.currentTarget.value = "";
-        }}
+        onChange={handleFileSelection}
+        ref={fileInputRef}
         type="file"
       />
+      <input
+        accept={supportedImageAccept}
+        aria-describedby={`${name}-upload-hint`}
+        capture="environment"
+        className="sr-only"
+        disabled={uploading}
+        id={`${name}-camera`}
+        onChange={handleFileSelection}
+        ref={cameraInputRef}
+        type="file"
+      />
+      <div className="flex flex-wrap gap-3">
+        <button
+          className="min-h-11 rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-sm font-bold text-[var(--color-ink)] transition hover:border-[var(--color-brand-blue)] hover:text-[var(--color-brand-blue)] disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          type="button"
+        >
+          Choose File
+        </button>
+        {cameraCaptureSupported ? (
+          <button
+            className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-blue)] px-4 text-sm font-bold text-white transition hover:bg-[var(--color-brand-blue-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={uploading}
+            onClick={() => cameraInputRef.current?.click()}
+            type="button"
+          >
+            Take Photo
+          </button>
+        ) : null}
+      </div>
       <p
         className="mt-2 text-xs font-semibold text-[var(--color-muted)]"
         id={`${name}-upload-hint`}
       >
-        JPG, JPEG, PNG, WebP, or GIF up to 200 KB. On supported mobile devices, you can
-        take a photo with your camera.
+        JPG, JPEG, PNG, WebP, or GIF up to 200 KB. Choose File opens your device picker;
+        Take Photo uses the camera when supported.
       </p>
       {value ? (
         <p className="mt-2 text-xs font-semibold text-[var(--color-success)]">

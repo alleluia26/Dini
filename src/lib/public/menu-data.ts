@@ -79,7 +79,7 @@ export const getPublicMenuData = cache(async (): Promise<PublicMenuData> => {
 
     const categories = await prisma.category.findMany({
       where: { active: true },
-      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       select: {
         id: true,
         slug: true,
@@ -88,7 +88,7 @@ export const getPublicMenuData = cache(async (): Promise<PublicMenuData> => {
         imageAsset: { select: { publicUrl: true } },
         menuItems: {
           where: { active: true },
-          orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+          orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
           select: {
             id: true,
             slug: true,

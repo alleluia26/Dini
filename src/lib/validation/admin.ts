@@ -20,6 +20,21 @@ const decimal = z
   .regex(/^\d+(?:\.\d{1,2})?$/, "Use a non-negative amount with up to two decimals.")
   .refine((value) => Number(value) <= 99_999_999.99, "Amount is too large.");
 
+const optionalDisplayOrder = z
+  .string()
+  .trim()
+  .transform((value) => value || null)
+  .pipe(
+    z.union([
+      z.null(),
+      z
+        .string()
+        .regex(/^[1-9]\d*$/, "Use a positive whole number.")
+        .transform(Number)
+        .pipe(z.number().int().positive().max(2_147_483_647)),
+    ]),
+  );
+
 export const categorySchema = z.object({
   id: z.string().cuid().optional(),
   name: z.string().trim().min(2).max(100),
@@ -30,42 +45,29 @@ export const categorySchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens.")
     .max(120),
   description: optionalText,
+  displayOrder: optionalDisplayOrder,
   imageAssetId: optionalId,
   active: z.boolean(),
 });
 
-export const menuItemSchema = z
-  .object({
-    id: z.string().cuid().optional(),
-    categoryId: z.string().cuid(),
-    name: z.string().trim().min(2).max(140),
-    slug: z
-      .string()
-      .trim()
-      .toLowerCase()
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens.")
-      .max(160),
-    description: optionalText,
-    price: decimal,
-    oldPrice: z
-      .string()
-      .trim()
-      .transform((value) => value || null)
-      .pipe(decimal.nullable()),
-    imageAssetId: optionalId,
-    available: z.boolean(),
-    featured: z.boolean(),
-    active: z.boolean(),
-  })
-  .superRefine((value, context) => {
-    if (value.oldPrice && Number(value.oldPrice) <= Number(value.price)) {
-      context.addIssue({
-        code: "custom",
-        message: "Old price must be greater than the current price.",
-        path: ["oldPrice"],
-      });
-    }
-  });
+export const menuItemSchema = z.object({
+  id: z.string().cuid().optional(),
+  categoryId: z.string().cuid(),
+  name: z.string().trim().min(2).max(140),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase words separated by hyphens.")
+    .max(160),
+  description: optionalText,
+  price: decimal,
+  displayOrder: optionalDisplayOrder,
+  imageAssetId: optionalId,
+  available: z.boolean(),
+  featured: z.boolean(),
+  active: z.boolean(),
+});
 
 export const settingsSchema = z.object({
   hotelName: z.string().trim().min(2).max(120),

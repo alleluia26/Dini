@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
 
 import { saveMenuItem, type AdminActionState } from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
@@ -8,17 +8,24 @@ import { MediaUpload } from "@/components/admin/media-upload";
 
 const initialState: AdminActionState = {};
 
+function validateDisplayOrderInput(event: FormEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  const isValid = input.value === "" || /^[1-9]\d*$/.test(input.value);
+
+  input.setCustomValidity(isValid ? "" : "Use a positive whole number.");
+}
+
 export type CategoryOption = { id: string; name: string };
 export type MenuItemFormData = {
   active: boolean;
   available: boolean;
   categoryId: string;
   description: string | null;
+  displayOrder: number;
   featured: boolean;
   id: string;
   imageAssetId: string | null;
   name: string;
-  oldPrice: string | null;
   price: string;
   slug: string;
 };
@@ -134,17 +141,25 @@ export function MenuItemForm({
           <FieldError errors={state.fieldErrors?.price} />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-bold" htmlFor="item-old-price">
-            Old price
+          <label className="mb-2 block text-sm font-bold" htmlFor="item-display-order">
+            Display Order
           </label>
           <input
             className="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] px-3 py-3"
-            defaultValue={item?.oldPrice ?? ""}
-            id="item-old-price"
-            inputMode="decimal"
-            name="oldPrice"
+            defaultValue={item && item.displayOrder > 0 ? item.displayOrder : ""}
+            id="item-display-order"
+            inputMode="numeric"
+            min="1"
+            name="displayOrder"
+            onInput={validateDisplayOrderInput}
+            placeholder="1"
+            step="1"
+            type="number"
           />
-          <FieldError errors={state.fieldErrors?.oldPrice} />
+          <p className="mt-2 text-xs text-[var(--color-muted)]">
+            Lower numbers appear first. Leave empty to automatically place it last.
+          </p>
+          <FieldError errors={state.fieldErrors?.displayOrder} />
         </div>
       </div>
       <fieldset className="flex flex-wrap gap-x-6 gap-y-3">

@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
               Menu management dashboard
             </h1>
             <p className="mt-4 text-base leading-7 text-[var(--color-muted)]">
-              Keep the digital menu organised, current, and ready for guests.
+              Keep the digital menu organised and ready for guests.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

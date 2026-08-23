@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
 
 import { saveCategory, type AdminActionState } from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
@@ -8,9 +8,17 @@ import { MediaUpload } from "@/components/admin/media-upload";
 
 const initialState: AdminActionState = {};
 
+function validateDisplayOrderInput(event: FormEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  const isValid = input.value === "" || /^[1-9]\d*$/.test(input.value);
+
+  input.setCustomValidity(isValid ? "" : "Use a positive whole number.");
+}
+
 export type CategoryFormData = {
   active: boolean;
   description: string | null;
+  displayOrder: number;
   id: string;
   imageAssetId: string | null;
   name: string;
@@ -21,6 +29,7 @@ type CategoryFormProps = {
   category?: {
     active: boolean;
     description: string | null;
+    displayOrder: number;
     id: string;
     imageAssetId: string | null;
     name: string;
@@ -93,6 +102,32 @@ export function CategoryForm({ category, onCancel, onSuccess }: CategoryFormProp
           name="description"
         />
         <FieldError errors={state.fieldErrors?.description} />
+      </div>
+      <div>
+        <label
+          className="mb-2 block text-sm font-bold"
+          htmlFor="category-display-order"
+        >
+          Display Order
+        </label>
+        <input
+          className="w-full rounded-[var(--radius-control)] border border-[var(--color-border)] px-3 py-3"
+          defaultValue={
+            category && category.displayOrder > 0 ? category.displayOrder : ""
+          }
+          id="category-display-order"
+          inputMode="numeric"
+          min="1"
+          name="displayOrder"
+          onInput={validateDisplayOrderInput}
+          placeholder="1"
+          step="1"
+          type="number"
+        />
+        <p className="mt-2 text-xs text-[var(--color-muted)]">
+          Lower numbers appear first. Leave empty to automatically place it last.
+        </p>
+        <FieldError errors={state.fieldErrors?.displayOrder} />
       </div>
       <div>
         <label className="flex min-h-11 items-center gap-3 text-sm font-bold">

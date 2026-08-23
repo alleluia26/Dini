@@ -29,12 +29,12 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
   };
   const [categories, items, selected] = await Promise.all([
     prisma.category.findMany({
-      orderBy: { displayOrder: "asc" },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       select: { id: true, name: true },
     }),
     prisma.menuItem.findMany({
       where,
-      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       include: {
         category: { select: { name: true } },
         imageAsset: { select: { publicUrl: true } },
@@ -44,9 +44,17 @@ export default async function MenuItemsPage({ searchParams }: MenuItemsPageProps
   ]);
   const formItem = selected
     ? {
-        ...selected,
+        active: selected.active,
+        available: selected.available,
+        categoryId: selected.categoryId,
+        description: selected.description,
+        displayOrder: selected.displayOrder,
+        featured: selected.featured,
+        id: selected.id,
+        imageAssetId: selected.imageAssetId,
+        name: selected.name,
         price: selected.price.toFixed(2),
-        oldPrice: selected.oldPrice?.toFixed(2) ?? null,
+        slug: selected.slug,
       }
     : undefined;
 

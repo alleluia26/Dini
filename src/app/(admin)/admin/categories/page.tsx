@@ -14,7 +14,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
   const [categories, selected] = await Promise.all([
     prisma.category.findMany({
       where,
-      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
       include: { _count: { select: { menuItems: true } } },
     }),
     edit ? prisma.category.findUnique({ where: { id: edit } }) : null,

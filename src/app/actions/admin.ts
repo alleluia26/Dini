@@ -59,6 +59,7 @@ export async function saveCategory(
     name: value(formData, "name"),
     slug: value(formData, "slug"),
     description: value(formData, "description"),
+    displayOrder: value(formData, "displayOrder"),
     imageAssetId: value(formData, "imageAssetId"),
     active: checked(formData, "active"),
   });
@@ -66,7 +67,7 @@ export async function saveCategory(
   if (!parsed.success) return errors(parsed.error);
 
   try {
-    const { id, ...categoryData } = parsed.data;
+    const { displayOrder, id, ...categoryData } = parsed.data;
     await assertMediaAsset(categoryData.imageAssetId);
 
     if (id) {
@@ -77,21 +78,34 @@ export async function saveCategory(
 
       await prisma.category.update({
         where: { id },
-        data: categoryData,
+        data: {
+          ...categoryData,
+          ...(displayOrder === null ? {} : { displayOrder }),
+        },
       });
 
       if (existing?.imageAssetId !== categoryData.imageAssetId) {
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      const lastCategory = await prisma.category.aggregate({
-        _max: { displayOrder: true },
-      });
-      await prisma.category.create({
-        data: {
-          ...categoryData,
-          displayOrder: (lastCategory._max.displayOrder ?? -1) + 1,
-        },
+      await prisma.$transaction(async (transaction) => {
+        if (displayOrder !== null) {
+          await transaction.category.create({
+            data: { ...categoryData, displayOrder },
+          });
+          return;
+        }
+
+        await transaction.$queryRaw`SELECT pg_advisory_xact_lock(719205)`;
+        const lastCategory = await transaction.category.aggregate({
+          _max: { displayOrder: true },
+        });
+        await transaction.category.create({
+          data: {
+            ...categoryData,
+            displayOrder: (lastCategory._max.displayOrder ?? 0) + 1,
+          },
+        });
       });
     }
 
@@ -147,7 +161,7 @@ export async function saveMenuItem(
     slug: value(formData, "slug"),
     description: value(formData, "description"),
     price: value(formData, "price"),
-    oldPrice: value(formData, "oldPrice"),
+    displayOrder: value(formData, "displayOrder"),
     imageAssetId: value(formData, "imageAssetId"),
     available: checked(formData, "available"),
     featured: checked(formData, "featured"),
@@ -157,7 +171,7 @@ export async function saveMenuItem(
   if (!parsed.success) return errors(parsed.error);
 
   try {
-    const { id, ...menuItemData } = parsed.data;
+    const { displayOrder, id, ...menuItemData } = parsed.data;
     const category = await prisma.category.findUnique({
       where: { id: menuItemData.categoryId },
       select: { id: true },
@@ -174,22 +188,37 @@ export async function saveMenuItem(
 
       await prisma.menuItem.update({
         where: { id },
-        data: menuItemData,
+        data: {
+          ...menuItemData,
+          ...(displayOrder === null ? {} : { displayOrder }),
+        },
       });
 
       if (existing?.imageAssetId !== menuItemData.imageAssetId) {
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      const lastMenuItem = await prisma.menuItem.aggregate({
-        where: { categoryId: menuItemData.categoryId },
-        _max: { displayOrder: true },
-      });
-      await prisma.menuItem.create({
-        data: {
-          ...menuItemData,
-          displayOrder: (lastMenuItem._max.displayOrder ?? -1) + 1,
-        },
+      await prisma.$transaction(async (transaction) => {
+        if (displayOrder !== null) {
+          await transaction.menuItem.create({
+            data: { ...menuItemData, displayOrder },
+          });
+          return;
+        }
+
+        await transaction.$queryRaw`
+          SELECT pg_advisory_xact_lock(hashtext(${menuItemData.categoryId}))
+        `;
+        const lastMenuItem = await transaction.menuItem.aggregate({
+          where: { categoryId: menuItemData.categoryId },
+          _max: { displayOrder: true },
+        });
+        await transaction.menuItem.create({
+          data: {
+            ...menuItemData,
+            displayOrder: (lastMenuItem._max.displayOrder ?? 0) + 1,
+          },
+        });
       });
     }
 

@@ -88,24 +88,20 @@ export async function saveCategory(
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      await prisma.$transaction(async (transaction) => {
-        if (displayOrder !== null) {
-          await transaction.category.create({
-            data: { ...categoryData, displayOrder },
-          });
-          return;
-        }
+      const lastCategory =
+        displayOrder === null
+          ? await prisma.category.aggregate({
+              _max: { displayOrder: true },
+            })
+          : null;
+      const nextDisplayOrder =
+        displayOrder ?? (lastCategory?._max.displayOrder ?? 0) + 1;
 
-        await transaction.$queryRaw`SELECT pg_advisory_xact_lock(719205)`;
-        const lastCategory = await transaction.category.aggregate({
-          _max: { displayOrder: true },
-        });
-        await transaction.category.create({
-          data: {
-            ...categoryData,
-            displayOrder: (lastCategory._max.displayOrder ?? 0) + 1,
-          },
-        });
+      await prisma.category.create({
+        data: {
+          ...categoryData,
+          displayOrder: nextDisplayOrder,
+        },
       });
     }
 
@@ -198,27 +194,21 @@ export async function saveMenuItem(
         await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
       }
     } else {
-      await prisma.$transaction(async (transaction) => {
-        if (displayOrder !== null) {
-          await transaction.menuItem.create({
-            data: { ...menuItemData, displayOrder },
-          });
-          return;
-        }
+      const lastMenuItem =
+        displayOrder === null
+          ? await prisma.menuItem.aggregate({
+              where: { categoryId: menuItemData.categoryId },
+              _max: { displayOrder: true },
+            })
+          : null;
+      const nextDisplayOrder =
+        displayOrder ?? (lastMenuItem?._max.displayOrder ?? 0) + 1;
 
-        await transaction.$queryRaw`
-          SELECT pg_advisory_xact_lock(hashtext(${menuItemData.categoryId}))
-        `;
-        const lastMenuItem = await transaction.menuItem.aggregate({
-          where: { categoryId: menuItemData.categoryId },
-          _max: { displayOrder: true },
-        });
-        await transaction.menuItem.create({
-          data: {
-            ...menuItemData,
-            displayOrder: (lastMenuItem._max.displayOrder ?? 0) + 1,
-          },
-        });
+      await prisma.menuItem.create({
+        data: {
+          ...menuItemData,
+          displayOrder: nextDisplayOrder,
+        },
       });
     }
 

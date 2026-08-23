@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { supportedImageAccept, validateImageFile } from "@/lib/validation/image";
+
 type MediaUploadProps = {
   label: string;
   name: string;
@@ -18,6 +20,8 @@ export function MediaUpload({ label, name, onUploaded, value }: MediaUploadProps
     setMessage(undefined);
 
     try {
+      await validateImageFile(file);
+
       const formData = new FormData();
       formData.set("file", file);
       const response = await fetch("/api/admin/media", {
@@ -52,16 +56,26 @@ export function MediaUpload({ label, name, onUploaded, value }: MediaUploadProps
         {label}
       </label>
       <input
-        accept="image/jpeg,image/png,image/webp,image/avif"
+        accept={supportedImageAccept}
+        aria-describedby={`${name}-upload-hint`}
+        capture="environment"
         className="block w-full text-sm text-[var(--color-muted)] file:mr-4 file:min-h-11 file:rounded-[var(--radius-control)] file:border-0 file:bg-[var(--color-brand-blue-soft)] file:px-4 file:font-bold file:text-[var(--color-brand-blue)]"
         disabled={uploading}
         id={name}
         onChange={(event) => {
           const file = event.currentTarget.files?.[0];
           if (file) void upload(file);
+          event.currentTarget.value = "";
         }}
         type="file"
       />
+      <p
+        className="mt-2 text-xs font-semibold text-[var(--color-muted)]"
+        id={`${name}-upload-hint`}
+      >
+        JPG, JPEG, PNG, WebP, or GIF up to 200 KB. On supported mobile devices, you can
+        take a photo with your camera.
+      </p>
       {value ? (
         <p className="mt-2 text-xs font-semibold text-[var(--color-success)]">
           An image is selected.

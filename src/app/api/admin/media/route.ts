@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { revalidateMenuManagement } from "@/lib/admin/revalidation";
 import { prisma } from "@/lib/db/client";
 import { vercelBlobStorage } from "@/lib/storage/vercel-blob";
+import { ImageValidationError, validateImageFile } from "@/lib/validation/image";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,17 @@ export async function POST(request: Request) {
       { message: "Choose an image file to upload." },
       { status: 400 },
     );
+  }
+
+  try {
+    await validateImageFile(file);
+  } catch (error) {
+    const message =
+      error instanceof ImageValidationError
+        ? error.message
+        : "Image upload failed. Check the image and try again.";
+
+    return NextResponse.json({ message }, { status: 400 });
   }
 
   try {

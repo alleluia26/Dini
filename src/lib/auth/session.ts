@@ -6,7 +6,8 @@ import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/db/client";
 
-const sessionCookieName = "dini_admin_session";
+const sessionCookieName = "dini_admin_session_v2";
+const legacySessionCookieName = "dini_admin_session";
 const sessionMaxAgeSeconds = 60 * 60 * 24 * 7;
 
 export type AuthenticatedAdmin = {
@@ -50,7 +51,6 @@ export async function createAdminSession(userId: string) {
 
   cookieStore.set(sessionCookieName, token, {
     httpOnly: true,
-    maxAge: sessionMaxAgeSeconds,
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -95,21 +95,28 @@ export async function getCurrentAdmin(): Promise<AuthenticatedAdmin | null> {
 
 export async function destroyCurrentAdminSession() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(sessionCookieName)?.value;
+  const tokens = [
+    cookieStore.get(sessionCookieName)?.value,
+    cookieStore.get(legacySessionCookieName)?.value,
+  ].filter((token): token is string => Boolean(token));
 
-  if (token) {
+  if (tokens.length > 0) {
     await prisma.adminSession.deleteMany({
       where: {
-        tokenHash: hashSessionToken(token),
+        tokenHash: {
+          in: tokens.map(hashSessionToken),
+        },
       },
     });
   }
 
-  cookieStore.set(sessionCookieName, "", {
-    httpOnly: true,
-    maxAge: 0,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
+  for (const cookieName of [sessionCookieName, legacySessionCookieName]) {
+    cookieStore.set(cookieName, "", {
+      httpOnly: true,
+      maxAge: 0,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
 }

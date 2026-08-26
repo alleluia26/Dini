@@ -51,14 +51,16 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
         </header>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
           {metricLabels.map(([label, suffix], index) => (
             <article
-              className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
+              className="min-w-0 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-sm sm:p-5"
               key={suffix}
             >
-              <p className="text-sm font-bold text-[var(--color-muted)]">{label}</p>
-              <p className="mt-3 text-3xl font-extrabold tracking-tight">
+              <p className="text-xs leading-5 font-bold text-[var(--color-muted)] sm:text-sm">
+                {label}
+              </p>
+              <p className="mt-2 text-2xl font-extrabold tracking-tight sm:mt-3 sm:text-3xl">
                 {values[index]}
               </p>
             </article>

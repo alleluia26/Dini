@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function AdminLoginPage() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[var(--color-surface-soft)] p-5">
+    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_top_left,rgb(201_32_32_/_20%),transparent_38%),radial-gradient(circle_at_bottom_right,rgb(23_57_199_/_20%),transparent_42%),linear-gradient(135deg,#fffafa,#f2f5ff)] p-5">
       <section className="w-full max-w-md rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-surface)] p-7 shadow-[var(--shadow-card)] sm:p-10">
         <BrandLogo className="h-auto w-56" priority sizes="224px" />
         <p className="mt-8 text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">

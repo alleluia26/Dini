@@ -45,11 +45,13 @@ export function useLocalTheme(storageKey: string) {
 }
 
 export function ThemeToggle({
+  compact = false,
   label,
   storageKey,
   variant = "segmented",
   visuallyHiddenLabel = false,
 }: {
+  compact?: boolean;
   label: string;
   storageKey: string;
   variant?: "segmented" | "switch";
@@ -60,6 +62,12 @@ export function ThemeToggle({
   if (variant === "switch") {
     const dark = theme === "dark";
     const nextTheme = dark ? "light" : "dark";
+    const controlClassName = compact
+      ? "relative inline-flex h-9 w-16 items-center rounded-full border border-white/55 bg-white/15 p-1 text-white shadow-sm transition hover:border-white hover:bg-white/25 focus-visible:ring-3 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-brand-red)] focus-visible:outline-none"
+      : "group relative inline-flex h-11 w-24 items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1 shadow-sm transition hover:border-[var(--color-brand-blue)] focus-visible:ring-3 focus-visible:ring-[var(--color-brand-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] focus-visible:outline-none";
+    const thumbClassName = compact
+      ? `absolute top-1 grid h-7 w-7 place-items-center rounded-full bg-white text-[var(--color-brand-red)] shadow-sm transition-transform duration-200 ease-out ${dark ? "translate-x-7" : "translate-x-0"}`
+      : `absolute top-1 grid h-9 w-9 place-items-center rounded-full bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm transition-transform duration-200 ease-out ${dark ? "translate-x-12" : "translate-x-0"}`;
 
     return (
       <fieldset>
@@ -76,35 +84,34 @@ export function ThemeToggle({
           <button
             aria-label={`Switch to ${nextTheme} mode`}
             aria-pressed={dark}
-            className="group relative inline-flex h-11 w-24 items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-soft)] p-1 shadow-sm transition hover:border-[var(--color-brand-blue)] focus-visible:ring-3 focus-visible:ring-[var(--color-brand-blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)] focus-visible:outline-none"
+            className={controlClassName}
             onClick={() => selectTheme(nextTheme)}
             type="button"
           >
             <span
-              className="grid w-1/2 place-items-center text-amber-500"
+              className={`grid w-1/2 place-items-center ${compact ? "text-white/85" : "text-amber-500"}`}
               aria-hidden="true"
             >
               <SunIcon />
             </span>
             <span
-              className="grid w-1/2 place-items-center text-[var(--color-brand-blue)]"
+              className={`grid w-1/2 place-items-center ${compact ? "text-white/85" : "text-[var(--color-brand-blue)]"}`}
               aria-hidden="true"
             >
               <MoonIcon />
             </span>
-            <span
-              aria-hidden="true"
-              className={`absolute top-1 grid h-9 w-9 place-items-center rounded-full bg-[var(--color-surface)] text-[var(--color-ink)] shadow-sm transition-transform duration-200 ease-out ${dark ? "translate-x-12" : "translate-x-0"}`}
-            >
+            <span aria-hidden="true" className={thumbClassName}>
               {dark ? <MoonIcon /> : <SunIcon />}
             </span>
           </button>
-          <span
-            className="text-sm font-bold text-[var(--color-muted)]"
-            aria-live="polite"
-          >
-            {dark ? "Dark mode" : "Light mode"}
-          </span>
+          {!compact ? (
+            <span
+              className="text-sm font-bold text-[var(--color-muted)]"
+              aria-live="polite"
+            >
+              {dark ? "Dark mode" : "Light mode"}
+            </span>
+          ) : null}
         </div>
       </fieldset>
     );

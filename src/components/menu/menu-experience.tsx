@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ThemeToggle, useLocalTheme } from "@/components/ui/theme-toggle";
 import type {
   PublicMenuCategory,
   PublicMenuData,
   PublicMenuItem,
 } from "@/lib/public/menu-data";
-import { ThemeToggle, useLocalTheme } from "@/components/ui/theme-toggle";
 
 type ReadyMenuData = Extract<PublicMenuData, { status: "ready" }>;
 
@@ -29,7 +29,7 @@ function MenuImage({
     return (
       <div
         aria-hidden="true"
-        className={`${className} grid place-items-center bg-[var(--color-surface-soft)] text-2xl font-extrabold text-[var(--color-muted)]`}
+        className={`${className} grid place-items-center bg-[var(--color-surface-soft)] text-3xl font-extrabold text-[var(--color-muted)]`}
       >
         —
       </div>
@@ -41,7 +41,7 @@ function MenuImage({
       alt={alt}
       className={className}
       height={720}
-      sizes="(min-width: 640px) 360px, 42vw"
+      sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw"
       src={src}
       unoptimized
       width={720}
@@ -59,45 +59,45 @@ function MenuItemCard({
   onSelect: (item: PublicMenuItem) => void;
 }) {
   return (
-    <article className="relative overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm">
+    <article className="menu-item-card group overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
       <button
         aria-label={`View details for ${item.name}`}
-        className="grid w-full grid-cols-[6rem_minmax(0,1fr)] gap-4 p-3 text-left sm:grid-cols-[8.5rem_1fr]"
+        className="block h-full w-full text-left"
         onClick={() => onSelect(item)}
         type="button"
       >
-        <MenuImage
-          alt={item.image?.alt ?? ""}
-          className="h-29 w-full rounded-[0.75rem] object-cover"
-          src={item.image?.url ?? null}
-        />
-        <span className="min-w-0 py-1">
-          <span className="flex items-start justify-between gap-3">
-            <span className="text-base leading-5 font-extrabold text-[var(--color-ink)]">
-              {item.name}
-            </span>
-            <span className="shrink-0 text-sm font-extrabold text-[var(--color-brand-red)]">
-              {formatPrice(item.price, currency)}
-            </span>
-          </span>
-          {item.description ? (
-            <span className="mt-2 line-clamp-2 block text-sm leading-5 text-[var(--color-muted)]">
-              {item.description}
+        <div className="relative h-48 overflow-hidden bg-[var(--color-surface-soft)]">
+          <MenuImage
+            alt={item.image?.alt ?? ""}
+            className="menu-item-image h-full w-full object-cover"
+            src={item.image?.url ?? null}
+          />
+          {item.featured ? (
+            <span className="absolute top-4 left-4 rounded-full bg-[var(--color-brand-red)] px-3 py-1.5 text-xs font-extrabold tracking-[0.08em] text-white uppercase shadow-sm">
+              Featured
             </span>
           ) : null}
-          <span className="mt-3 flex flex-wrap gap-2">
-            {item.featured ? (
-              <span className="rounded-full bg-[var(--color-brand-blue-soft)] px-2.5 py-1 text-xs font-extrabold text-[var(--color-brand-blue)]">
-                Featured
-              </span>
-            ) : null}
-            {!item.available ? (
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-extrabold text-[var(--color-warning)]">
-                Currently unavailable
-              </span>
-            ) : null}
-          </span>
-        </span>
+        </div>
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="text-lg leading-6 font-extrabold tracking-tight text-[var(--color-ink)] sm:text-xl">
+              {item.name}
+            </h3>
+            <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--color-brand-red)_10%,transparent)] px-3 py-1 text-sm font-extrabold text-[var(--color-brand-red)]">
+              {formatPrice(item.price, currency)}
+            </span>
+          </div>
+          {item.description ? (
+            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+              {item.description}
+            </p>
+          ) : null}
+          {!item.available ? (
+            <p className="pt-4 text-xs font-extrabold tracking-[0.08em] text-[var(--color-warning)] uppercase">
+              Currently unavailable
+            </p>
+          ) : null}
+        </div>
       </button>
     </article>
   );
@@ -113,17 +113,13 @@ function MenuItemDialog({
   onClose: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-
     if (item && !dialog.open) dialog.showModal();
     if (!item && dialog.open) dialog.close();
   }, [item]);
-
   if (!item) return <dialog ref={dialogRef} />;
-
   return (
     <dialog
       aria-labelledby="menu-item-dialog-title"
@@ -169,7 +165,7 @@ function MenuItemDialog({
           ) : null}
           <button
             autoFocus
-            className="mt-6 min-h-11 w-full rounded-[var(--radius-control)] bg-[var(--color-brand-blue)] px-5 py-3 text-sm font-extrabold text-white"
+            className="mt-6 min-h-11 w-full rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[var(--color-brand-red-hover)]"
             onClick={onClose}
             type="button"
           >
@@ -193,8 +189,8 @@ function EmptyMenuState({ heading, text }: { heading: string; text: string }) {
         />
       </div>
       <section className="w-full rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-surface)] p-7 text-center shadow-[var(--shadow-card)] sm:p-10">
-        <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
-          DIGITAL MENU
+        <p className="text-sm font-extrabold tracking-[0.18em] text-[var(--color-brand-red)] uppercase">
+          Digital Menu
         </p>
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--color-ink)]">
           {heading}
@@ -208,8 +204,7 @@ function EmptyMenuState({ heading, text }: { heading: string; text: string }) {
 export function MenuExperience({ data }: { data: PublicMenuData }) {
   const [selectedItem, setSelectedItem] = useState<PublicMenuItem | null>(null);
   const { theme } = useLocalTheme("dini-public-theme");
-
-  if (data.status === "error") {
+  if (data.status === "error")
     return (
       <div className="min-h-screen bg-[var(--color-canvas)]" data-public-theme={theme}>
         <EmptyMenuState
@@ -218,9 +213,7 @@ export function MenuExperience({ data }: { data: PublicMenuData }) {
         />
       </div>
     );
-  }
-
-  if (data.status === "unavailable") {
+  if (data.status === "unavailable")
     return (
       <div className="min-h-screen bg-[var(--color-canvas)]" data-public-theme={theme}>
         <EmptyMenuState
@@ -229,8 +222,6 @@ export function MenuExperience({ data }: { data: PublicMenuData }) {
         />
       </div>
     );
-  }
-
   return (
     <div className="min-h-screen bg-[var(--color-canvas)]" data-public-theme={theme}>
       <ReadyMenuExperience
@@ -254,182 +245,157 @@ function ReadyMenuExperience({
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const filteredCategories = useMemo(() => {
-    return data.categories
-      .filter((category) => !activeCategory || category.id === activeCategory)
-      .map((category) => ({
-        ...category,
-        items: normalizedQuery
-          ? category.items.filter((item) =>
-              [item.name, item.description ?? ""].some((value) =>
-                value.toLocaleLowerCase().includes(normalizedQuery),
-              ),
-            )
-          : category.items,
-      }))
-      .filter((category) => category.items.length > 0);
-  }, [activeCategory, data.categories, normalizedQuery]);
-  const featuredItems = normalizedQuery
-    ? data.featuredItems.filter((item) =>
-        [item.name, item.description ?? ""].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedQuery),
-        ),
-      )
-    : data.featuredItems;
+  const filteredCategories = useMemo(
+    () =>
+      data.categories
+        .filter((category) => !activeCategory || category.id === activeCategory)
+        .map((category) => ({
+          ...category,
+          items: normalizedQuery
+            ? category.items.filter((item) =>
+                [item.name, item.description ?? ""].some((value) =>
+                  value.toLocaleLowerCase().includes(normalizedQuery),
+                ),
+              )
+            : category.items,
+        }))
+        .filter((category) => category.items.length > 0),
+    [activeCategory, data.categories, normalizedQuery],
+  );
   const hasItems = data.categories.some((category) => category.items.length > 0);
 
   return (
-    <main className="min-h-screen bg-[var(--color-canvas)] pb-12">
-      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8">
-          <Image
-            alt={data.settings.hotelName}
-            className="h-12 w-auto object-contain"
-            height={120}
-            priority
-            src="/brand/dini-hotel-logo.jpg"
-            style={{ width: "auto" }}
-            width={180}
-          />
-          <p className="text-right text-xs font-extrabold tracking-[0.14em] text-[var(--color-brand-blue)]">
-            DIGITAL MENU
-          </p>
-          <ThemeToggle
-            label="Menu appearance"
-            storageKey="dini-public-theme"
-            variant="switch"
-            visuallyHiddenLabel
-          />
-        </div>
-      </header>
-
-      <section className="border-b border-[var(--color-border)] bg-[var(--color-brand-blue-soft)]">
-        <div className="mx-auto grid max-w-5xl gap-6 px-5 py-8 sm:grid-cols-[1fr_15rem] sm:items-center sm:px-8 sm:py-10">
-          <div>
-            <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
-              WELCOME
-            </p>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-[var(--color-ink)] sm:text-4xl">
-              {data.settings.hotelName} menu
-            </h1>
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[var(--color-canvas)]">
+      <header className="border-b border-white/15 bg-[var(--color-brand-red)] shadow-sm">
+        <div className="relative mx-auto flex max-w-7xl items-center px-4 py-1 sm:px-8 sm:py-1.5">
+          <div className="flex min-w-0 items-center gap-2.5 pr-20 sm:gap-3">
+            <Image
+              alt="Dini Hotel"
+              className="h-11 w-11 shrink-0 rounded-full object-cover sm:h-13 sm:w-13"
+              height={120}
+              priority
+              src="/brand/dini-hotel-logo.jpg"
+              width={120}
+            />
+            <div className="min-w-0">
+              <p className="truncate text-base font-black tracking-[0.12em] text-white uppercase sm:text-lg">
+                Dini Hotel
+              </p>
+            </div>
+          </div>
+          <div className="absolute top-1/2 right-4 -translate-y-1/2 sm:right-8">
+            <ThemeToggle
+              compact
+              label="Menu appearance"
+              storageKey="dini-public-theme"
+              variant="switch"
+              visuallyHiddenLabel
+            />
           </div>
         </div>
-      </section>
-
-      <div className="mx-auto max-w-5xl px-5 sm:px-8">
-        {data.categories.length > 0 ? (
-          <nav
-            aria-label="Menu categories"
-            className="-mx-5 border-b border-[var(--color-border)] px-5 py-4 sm:-mx-8 sm:px-8"
-          >
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible">
-              <button
-                aria-pressed={!activeCategory}
-                className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${!activeCategory ? "bg-[var(--color-brand-red)] text-white" : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)]"}`}
-                onClick={() => setActiveCategory(null)}
-                type="button"
-              >
-                All
-              </button>
-              {data.categories.map((category) => {
-                const active = activeCategory === category.id;
-                return (
-                  <button
-                    aria-pressed={active}
-                    className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-sm font-extrabold transition ${active ? "bg-[var(--color-brand-red)] text-white" : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:bg-[var(--color-surface-soft)]"}`}
-                    key={category.id}
-                    onClick={() => setActiveCategory(category.id)}
-                    type="button"
-                  >
-                    {category.name}
-                  </button>
-                );
-              })}
-            </div>
-          </nav>
-        ) : null}
-
-        <section aria-label="Search the menu" className="py-6">
-          <label className="sr-only" htmlFor="menu-search">
-            Search menu items
-          </label>
-          <input
-            className="min-h-12 w-full rounded-[var(--radius-control)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-base shadow-sm placeholder:text-[var(--color-muted)]"
-            id="menu-search"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search the menu"
-            type="search"
-            value={query}
-          />
-        </section>
-
-        {!hasItems ? (
-          <section className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
-            <h2 className="text-xl font-extrabold">The menu is being prepared</h2>
-            <p className="mt-3 text-[var(--color-muted)]">
-              Please return shortly to browse the latest selections.
+      </header>
+      <main className="flex-1">
+        <section className="relative isolate overflow-hidden border-b border-red-950/10 bg-[var(--color-surface)]">
+          <div className="absolute inset-x-0 top-0 -z-10 h-1 bg-[var(--color-brand-red)]" />
+          <div className="absolute -top-24 -right-20 -z-10 h-64 w-64 rounded-full bg-red-600/10 blur-3xl" />
+          <div className="absolute -bottom-32 -left-20 -z-10 h-64 w-64 rounded-full bg-red-700/10 blur-3xl" />
+          <div className="mx-auto max-w-7xl px-5 py-8 text-center sm:px-8 sm:py-10">
+            <p className="text-xs font-extrabold tracking-[0.24em] text-[var(--color-brand-red)] uppercase sm:text-sm">
+              Dini Hotel presents
             </p>
-          </section>
-        ) : (
-          <>
-            {featuredItems.length > 0 ? (
-              <section aria-labelledby="featured-heading" className="pb-10">
-                <div className="mb-4 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--color-brand-red)]">
-                      HIGHLIGHTS
-                    </p>
-                    <h2
-                      className="mt-1 text-2xl font-extrabold tracking-tight"
-                      id="featured-heading"
+            <h1 className="mt-2 text-4xl leading-tight font-black tracking-tight text-[var(--color-ink)] sm:text-5xl lg:text-6xl">
+              Welcome to{" "}
+              <span className="text-[var(--color-brand-red)]">Dini Hotel</span> Menu
+            </h1>
+          </div>
+        </section>
+        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
+          <div className="text-center">
+            <p className="text-xs font-extrabold tracking-[0.24em] text-[var(--color-brand-red)] uppercase">
+              Explore our selection
+            </p>
+            <h2 className="mt-1 text-3xl font-black tracking-tight text-[var(--color-ink)] sm:text-4xl">
+              Digital Menu
+            </h2>
+            <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-[var(--color-brand-red)]" />
+          </div>
+          {data.categories.length > 0 ? (
+            <nav aria-label="Menu categories" className="mt-6">
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center sm:overflow-visible">
+                <button
+                  aria-pressed={!activeCategory}
+                  className={`min-h-11 shrink-0 rounded-full px-5 py-2 text-sm font-extrabold transition ${!activeCategory ? "bg-[var(--color-brand-red)] text-white shadow-md" : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-brand-red)] hover:text-[var(--color-brand-red)]"}`}
+                  onClick={() => setActiveCategory(null)}
+                  type="button"
+                >
+                  All
+                </button>
+                {data.categories.map((category) => {
+                  const active = activeCategory === category.id;
+                  return (
+                    <button
+                      aria-pressed={active}
+                      className={`min-h-11 shrink-0 rounded-full px-5 py-2 text-sm font-extrabold transition ${active ? "bg-[var(--color-brand-red)] text-white shadow-md" : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-ink)] hover:border-[var(--color-brand-red)] hover:text-[var(--color-brand-red)]"}`}
+                      key={category.id}
+                      onClick={() => setActiveCategory(category.id)}
+                      type="button"
                     >
-                      Featured items
-                    </h2>
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {featuredItems.map((item) => (
-                    <MenuItemCard
-                      currency={data.settings.currency}
-                      item={item}
-                      key={item.id}
-                      onSelect={onSelect}
-                    />
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            <div className="space-y-10">
+                      {category.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+          ) : null}
+          <section aria-label="Search the menu" className="mx-auto mt-5 max-w-xl">
+            <label className="sr-only" htmlFor="menu-search">
+              Search menu items
+            </label>
+            <input
+              className="min-h-12 w-full rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-5 text-base shadow-sm placeholder:text-[var(--color-muted)] focus:border-[var(--color-brand-red)]"
+              id="menu-search"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search the menu"
+              type="search"
+              value={query}
+            />
+          </section>
+          {!hasItems ? (
+            <section className="mt-12 rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+              <h2 className="text-xl font-extrabold">The menu is being prepared</h2>
+              <p className="mt-3 text-[var(--color-muted)]">
+                Please return shortly to browse the latest selections.
+              </p>
+            </section>
+          ) : (
+            <div className="mt-8 space-y-12">
               {filteredCategories.map((category: PublicMenuCategory) => (
                 <section
                   aria-labelledby={`${category.slug}-heading`}
                   id={category.slug}
                   key={category.id}
                 >
-                  <div className="mb-4 flex items-start gap-4">
-                    {category.image ? (
-                      <MenuImage
-                        alt={category.image.alt}
-                        className="h-16 w-16 shrink-0 rounded-[var(--radius-control)] object-cover"
-                        src={category.image.url}
-                      />
-                    ) : null}
-                    <div>
+                  <div className="mb-6 flex items-center gap-4 sm:mb-8">
+                    <div className="h-px flex-1 bg-[var(--color-brand-red)]/25" />
+                    <div className="text-center">
+                      <p className="text-xs font-extrabold tracking-[0.2em] text-[var(--color-brand-red)] uppercase">
+                        Dini Hotel
+                      </p>
                       <h2
-                        className="text-2xl font-extrabold tracking-tight text-[var(--color-ink)]"
+                        className="mt-1 text-2xl font-black tracking-tight text-[var(--color-ink)] uppercase sm:text-3xl"
                         id={`${category.slug}-heading`}
                       >
                         {category.name}
                       </h2>
-                      {category.description ? (
-                        <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">
-                          {category.description}
-                        </p>
-                      ) : null}
                     </div>
+                    <div className="h-px flex-1 bg-[var(--color-brand-red)]/25" />
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  {category.description ? (
+                    <p className="mx-auto -mt-4 mb-6 max-w-2xl text-center text-sm leading-6 text-[var(--color-muted)]">
+                      {category.description}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                     {category.items.map((item) => (
                       <MenuItemCard
                         currency={data.settings.currency}
@@ -442,22 +408,27 @@ function ReadyMenuExperience({
                 </section>
               ))}
             </div>
-            {normalizedQuery && filteredCategories.length === 0 ? (
-              <section className="rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
-                <h2 className="text-xl font-extrabold">No matching items</h2>
-                <p className="mt-3 text-[var(--color-muted)]">
-                  Try a different search term or browse a category above.
-                </p>
-              </section>
-            ) : null}
-          </>
-        )}
-      </div>
+          )}
+          {normalizedQuery && filteredCategories.length === 0 ? (
+            <section className="mt-12 rounded-[var(--radius-card)] border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+              <h2 className="text-xl font-extrabold">No matching items</h2>
+              <p className="mt-3 text-[var(--color-muted)]">
+                Try a different search term or browse a category above.
+              </p>
+            </section>
+          ) : null}
+        </div>
+      </main>
+      <footer className="mt-auto bg-[var(--color-brand-red)] px-5 py-4 text-white sm:px-8">
+        <p className="text-center text-sm font-semibold tracking-wide">
+          © Dini Hotel. All right reserved
+        </p>
+      </footer>
       <MenuItemDialog
         currency={data.settings.currency}
         item={selectedItem}
         onClose={() => onSelect(null)}
       />
-    </main>
+    </div>
   );
 }

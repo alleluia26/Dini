@@ -1,11 +1,20 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { AccountSecuritySettings } from "@/components/admin/account-security-settings";
 import { SettingsForm } from "@/components/admin/settings-form";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/db/client";
 
 export default async function SettingsPage() {
-  const settings = await prisma.restaurantSettings.findUnique({
-    where: { id: "default" },
-  });
+  const admin = await requireAdmin();
+  const [settings, currentAdmin] = await Promise.all([
+    prisma.restaurantSettings.findUnique({
+      where: { id: "default" },
+    }),
+    prisma.adminUser.findUnique({
+      where: { id: admin.id },
+      select: { email: true },
+    }),
+  ]);
   return (
     <AdminShell>
       <section className="mx-auto max-w-4xl space-y-8">
@@ -22,6 +31,9 @@ export default async function SettingsPage() {
           </p>
         </header>
         <SettingsForm settings={settings} />
+        {currentAdmin?.email ? (
+          <AccountSecuritySettings currentEmail={currentAdmin.email} />
+        ) : null}
       </section>
     </AdminShell>
   );

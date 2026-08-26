@@ -28,3 +28,33 @@ select {
   outline: 3px solid var(--color-brand-blue);
   outline-offset: 3px;
 }
+
+.menu-item-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.menu-item-image {
+  transition: transform 500ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-item-card:hover {
+    border-color: color-mix(in srgb, var(--color-brand-red) 42%, var(--color-border));
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-0.5rem) scale(1.01);
+  }
+
+  .menu-item-card:hover .menu-item-image {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-item-card,
+  .menu-item-image {
+    transition: none;
+  }
+}

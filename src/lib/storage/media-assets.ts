@@ -18,7 +18,9 @@ export async function deleteMediaAssetIfUnused(id: string | null) {
     return false;
   }
 
-  await vercelBlobStorage.deleteAsset(asset.storageKey);
+  if (asset.provider === "vercel-blob") {
+    await vercelBlobStorage.deleteAsset(asset.storageKey).catch(() => undefined);
+  }
   await prisma.mediaAsset.delete({ where: { id } });
   return true;
 }

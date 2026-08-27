@@ -1,10 +1,9 @@
 "use client";
 
-import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
+import { type FormEvent, useActionState, useEffect, useRef } from "react";
 
 import { saveCategory, type AdminActionState } from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
-import { MediaUpload } from "@/components/admin/media-upload";
 
 const initialState: AdminActionState = {};
 
@@ -20,7 +19,6 @@ export type CategoryFormData = {
   description: string | null;
   displayOrder: number;
   id: string;
-  imageAssetId: string | null;
   name: string;
   slug: string;
 };
@@ -31,7 +29,6 @@ type CategoryFormProps = {
     description: string | null;
     displayOrder: number;
     id: string;
-    imageAssetId: string | null;
     name: string;
     slug: string;
   };
@@ -41,7 +38,6 @@ type CategoryFormProps = {
 
 export function CategoryForm({ category, onCancel, onSuccess }: CategoryFormProps) {
   const [state, formAction, isPending] = useActionState(saveCategory, initialState);
-  const [imageAssetId, setImageAssetId] = useState(category?.imageAssetId ?? "");
   const successHandled = useRef(false);
 
   useEffect(() => {
@@ -62,7 +58,6 @@ export function CategoryForm({ category, onCancel, onSuccess }: CategoryFormProp
       className="space-y-5 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-sm"
     >
       <input name="id" type="hidden" value={category?.id ?? ""} />
-      <input name="imageAssetId" type="hidden" value={imageAssetId} />
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-bold" htmlFor="category-name">
@@ -139,12 +134,6 @@ export function CategoryForm({ category, onCancel, onSuccess }: CategoryFormProp
           Active on the menu
         </label>
       </div>
-      <MediaUpload
-        label="Category image"
-        name="category-image"
-        onUploaded={(asset) => setImageAssetId(asset.id)}
-        value={imageAssetId}
-      />
       <ActionFeedback state={state} />
       <div className="flex flex-wrap justify-end gap-3">
         {onCancel ? (

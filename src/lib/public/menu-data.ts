@@ -21,7 +21,6 @@ export type PublicMenuCategory = {
   slug: string;
   name: string;
   description: string | null;
-  image: { url: string; alt: string } | null;
   items: PublicMenuItem[];
 };
 
@@ -85,7 +84,6 @@ export const getPublicMenuData = cache(async (): Promise<PublicMenuData> => {
         slug: true,
         name: true,
         description: true,
-        imageAsset: { select: { publicUrl: true } },
         menuItems: {
           where: { active: true },
           orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }],
@@ -109,9 +107,6 @@ export const getPublicMenuData = cache(async (): Promise<PublicMenuData> => {
       slug: category.slug,
       name: category.name,
       description: category.description,
-      image: category.imageAsset
-        ? { url: category.imageAsset.publicUrl, alt: category.name }
-        : null,
       items: category.menuItems.map(toPublicMenuItem),
     }));
 

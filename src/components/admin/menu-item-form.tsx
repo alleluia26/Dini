@@ -1,8 +1,19 @@
 "use client";
 
-import { type FormEvent, useActionState, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
-import { saveMenuItem, type AdminActionState } from "@/app/actions/admin";
+import {
+  removeMenuItemImage,
+  saveMenuItem,
+  type AdminActionState,
+} from "@/app/actions/admin";
 import { ActionFeedback, FieldError } from "@/components/admin/action-feedback";
 import { MediaUpload } from "@/components/admin/media-upload";
 
@@ -45,6 +56,8 @@ export function MenuItemForm({
 }: MenuItemFormProps) {
   const [state, formAction, isPending] = useActionState(saveMenuItem, initialState);
   const [imageAssetId, setImageAssetId] = useState(item?.imageAssetId ?? "");
+  const [imageRemovalState, setImageRemovalState] = useState<AdminActionState>({});
+  const [isRemovingImage, startRemovingImage] = useTransition();
   const successHandled = useRef(false);
 
   useEffect(() => {
@@ -58,6 +71,18 @@ export function MenuItemForm({
       onSuccess?.();
     }
   }, [onSuccess, state.success]);
+
+  function handleRemoveImage() {
+    if (!item?.id || !window.confirm("Remove this menu image?")) return;
+
+    const formData = new FormData();
+    formData.set("id", item.id);
+    startRemovingImage(async () => {
+      const result = await removeMenuItemImage(formData);
+      setImageRemovalState(result);
+      if (result.success) setImageAssetId("");
+    });
+  }
 
   return (
     <form
@@ -191,6 +216,23 @@ export function MenuItemForm({
         onUploaded={(asset) => setImageAssetId(asset.id)}
         value={imageAssetId}
       />
+      {item && imageAssetId ? (
+        <div className="mt-3">
+          <button
+            className="min-h-11 rounded-[var(--radius-control)] border border-red-200 px-4 text-sm font-bold text-[var(--color-brand-red)] disabled:opacity-60"
+            disabled={isRemovingImage}
+            onClick={handleRemoveImage}
+            type="button"
+          >
+            {isRemovingImage ? "Removing…" : "Remove Menu Image"}
+          </button>
+          {imageRemovalState.message ? (
+            <p className="mt-2 text-sm font-medium text-[var(--color-muted)]">
+              {imageRemovalState.message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <ActionFeedback state={state} />
       <div className="flex flex-wrap justify-end gap-3">
         {onCancel ? (

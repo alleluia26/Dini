@@ -60,7 +60,6 @@ export async function saveCategory(
     slug: value(formData, "slug"),
     description: value(formData, "description"),
     displayOrder: value(formData, "displayOrder"),
-    imageAssetId: value(formData, "imageAssetId"),
     active: checked(formData, "active"),
   });
 
@@ -68,14 +67,7 @@ export async function saveCategory(
 
   try {
     const { displayOrder, id, ...categoryData } = parsed.data;
-    await assertMediaAsset(categoryData.imageAssetId);
-
     if (id) {
-      const existing = await prisma.category.findUnique({
-        where: { id },
-        select: { imageAssetId: true },
-      });
-
       await prisma.category.update({
         where: { id },
         data: {
@@ -83,10 +75,6 @@ export async function saveCategory(
           ...(displayOrder === null ? {} : { displayOrder }),
         },
       });
-
-      if (existing?.imageAssetId !== categoryData.imageAssetId) {
-        await deleteMediaAssetIfUnused(existing?.imageAssetId ?? null);
-      }
     } else {
       const lastCategory =
         displayOrder === null
@@ -235,6 +223,37 @@ export async function deleteMenuItem(
     return { success: true, message: "Menu item deleted." };
   } catch {
     return { message: "This menu item could not be deleted." };
+  }
+}
+
+export async function removeMenuItemImage(
+  formData: FormData,
+): Promise<AdminActionState> {
+  await requireAdmin();
+  const id = value(formData, "id");
+
+  if (!id) return { message: "Choose a menu item first." };
+
+  try {
+    const item = await prisma.menuItem.findUnique({
+      where: { id },
+      select: { imageAssetId: true },
+    });
+
+    if (!item) return { message: "This menu item no longer exists." };
+    if (!item.imageAssetId)
+      return { success: true, message: "Menu image already removed." };
+
+    await prisma.menuItem.update({
+      where: { id },
+      data: { imageAssetId: null },
+    });
+    await deleteMediaAssetIfUnused(item.imageAssetId);
+    revalidateMenuManagement();
+
+    return { success: true, message: "Menu image removed." };
+  } catch (error) {
+    return databaseError(error);
   }
 }
 

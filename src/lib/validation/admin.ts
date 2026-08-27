@@ -46,7 +46,6 @@ export const categorySchema = z.object({
     .max(120),
   description: optionalText,
   displayOrder: optionalDisplayOrder,
-  imageAssetId: optionalId,
   active: z.boolean(),
 });
 

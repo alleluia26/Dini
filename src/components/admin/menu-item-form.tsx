@@ -57,6 +57,7 @@ export function MenuItemForm({
   const [state, formAction, isPending] = useActionState(saveMenuItem, initialState);
   const [imageAssetId, setImageAssetId] = useState(item?.imageAssetId ?? "");
   const [imageRemovalState, setImageRemovalState] = useState<AdminActionState>({});
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [isRemovingImage, startRemovingImage] = useTransition();
   const successHandled = useRef(false);
 
@@ -73,14 +74,24 @@ export function MenuItemForm({
   }, [onSuccess, state.success]);
 
   function handleRemoveImage() {
-    if (!item?.id || !window.confirm("Remove this menu image?")) return;
+    if (!item?.id) return;
+
+    setImageRemovalState({});
+    setIsRemoveDialogOpen(true);
+  }
+
+  function confirmRemoveImage() {
+    if (!item?.id) return;
 
     const formData = new FormData();
     formData.set("id", item.id);
     startRemovingImage(async () => {
       const result = await removeMenuItemImage(formData);
       setImageRemovalState(result);
-      if (result.success) setImageAssetId("");
+      if (result.success) {
+        setImageAssetId("");
+        setIsRemoveDialogOpen(false);
+      }
     });
   }
 
@@ -231,6 +242,47 @@ export function MenuItemForm({
               {imageRemovalState.message}
             </p>
           ) : null}
+        </div>
+      ) : null}
+      {isRemoveDialogOpen ? (
+        <div
+          aria-labelledby="remove-menu-image-title"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(23_32_51_/_55%)] p-4"
+          role="dialog"
+        >
+          <div className="w-full max-w-md rounded-[var(--radius-panel)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-elevated)] sm:p-6">
+            <h2 className="text-xl font-extrabold" id="remove-menu-image-title">
+              Remove menu image?
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+              This permanently removes the image from this menu item. This action cannot
+              be undone.
+            </p>
+            {imageRemovalState.message && !imageRemovalState.success ? (
+              <p className="mt-3 text-sm font-semibold text-[var(--color-brand-red)]">
+                {imageRemovalState.message}
+              </p>
+            ) : null}
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                className="min-h-11 rounded-[var(--radius-control)] border border-[var(--color-border)] px-5 text-sm font-bold disabled:opacity-60"
+                disabled={isRemovingImage}
+                onClick={() => setIsRemoveDialogOpen(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="min-h-11 rounded-[var(--radius-control)] bg-[var(--color-brand-red)] px-5 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isRemovingImage}
+                onClick={confirmRemoveImage}
+                type="button"
+              >
+                {isRemovingImage ? "Removing…" : "Remove Image"}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
       <ActionFeedback state={state} />

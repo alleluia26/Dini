@@ -41,7 +41,7 @@ function MenuImage({
       alt={alt}
       className={className}
       height={720}
-      sizes="(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw"
+      sizes="(min-width: 1024px) 320px, 45vw"
       src={src}
       unoptimized
       width={720}
@@ -59,41 +59,41 @@ function MenuItemCard({
   onSelect: (item: PublicMenuItem) => void;
 }) {
   return (
-    <article className="menu-item-card group overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
+    <article className="menu-item-card group min-w-0 overflow-hidden rounded-[1.6rem] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-[var(--shadow-card)]">
       <button
         aria-label={`View details for ${item.name}`}
         className="block h-full w-full text-left"
         onClick={() => onSelect(item)}
         type="button"
       >
-        <div className="relative h-48 overflow-hidden bg-[var(--color-surface-soft)]">
+        <div className="relative h-28 overflow-hidden bg-[var(--color-surface-soft)] sm:h-48">
           <MenuImage
             alt={item.image?.alt ?? ""}
             className="menu-item-image h-full w-full object-cover"
             src={item.image?.url ?? null}
           />
           {item.featured ? (
-            <span className="absolute top-4 left-4 rounded-full bg-[var(--color-brand-red)] px-3 py-1.5 text-xs font-extrabold tracking-[0.08em] text-white uppercase shadow-sm">
+            <span className="absolute top-2 left-2 rounded-full bg-[var(--color-brand-red)] px-2 py-1 text-[0.6875rem] font-extrabold tracking-[0.08em] text-white uppercase shadow-sm sm:top-4 sm:left-4 sm:px-3 sm:py-1.5 sm:text-xs">
               Featured
             </span>
           ) : null}
         </div>
-        <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="text-lg leading-6 font-extrabold tracking-tight text-[var(--color-ink)] sm:text-xl">
+        <div className="p-3 sm:p-5">
+          <div className="flex flex-col items-start gap-2 sm:flex-row sm:justify-between sm:gap-3">
+            <h3 className="min-w-0 text-base leading-5 font-extrabold tracking-tight break-words text-[var(--color-ink)] sm:text-xl sm:leading-6">
               {item.name}
             </h3>
-            <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--color-brand-red)_10%,transparent)] px-3 py-1 text-sm font-extrabold text-[var(--color-brand-red)]">
+            <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--color-brand-red)_10%,transparent)] px-2.5 py-1 text-sm font-extrabold text-[var(--color-brand-red)] sm:px-3">
               {formatPrice(item.price, currency)}
             </span>
           </div>
           {item.description ? (
-            <p className="mt-3 text-sm leading-6 text-[var(--color-muted)]">
+            <p className="mt-2 text-xs leading-5 break-words text-[var(--color-muted)] sm:mt-3 sm:text-sm sm:leading-6">
               {item.description}
             </p>
           ) : null}
           {!item.available ? (
-            <p className="pt-4 text-xs font-extrabold tracking-[0.08em] text-[var(--color-warning)] uppercase">
+            <p className="pt-3 text-xs font-extrabold tracking-[0.08em] text-[var(--color-warning)] uppercase sm:pt-4">
               Currently unavailable
             </p>
           ) : null}
@@ -395,7 +395,7 @@ function ReadyMenuExperience({
                       {category.description}
                     </p>
                   ) : null}
-                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
                     {category.items.map((item) => (
                       <MenuItemCard
                         currency={data.settings.currency}
